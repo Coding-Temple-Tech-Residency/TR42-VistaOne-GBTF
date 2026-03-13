@@ -2,12 +2,14 @@
 
 ## Project Information
 
-Please complete the following before submitting your repository.
-
 **Project Name:**  
 **Team Name:**  
-**Cohort / Sprint:**  
 **Team Members:**  
+- Justin Wold- Full stack (Backend Head)
+- Aldo Emmanuel Pena Herrera- Full stack
+- Charlie Estrada - Full stack (Frontend Head)
+- Hector Gomez - Cybersecurity
+
 **Tech Stack:** 
 
 ## Project Overview
