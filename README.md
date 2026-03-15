@@ -284,10 +284,10 @@ This project was created as part of a Coding Temple Tech Residency. All work pro
 Copyright © 2026 Coding Temple. All rights reserved.
 
 👨‍💻 Team
-Name	Role	Focus
-Justin Wold	Full Stack	Backend Head
-Aldo Emmanuel Pena Herrera	Full Stack	Backend
-Charlie Estrada	Full Stack	Frontend Head
-Hector Gomez	Cybersecurity	Security
+Name Role Focus
+-Justin Wold	Full Stack Backend Head
+-Aldo Emmanuel Pena Herrera	Full Stack	Backend
+-Charlie Estrada	Full Stack	Frontend Head
+-Hector Gomez	Cybersecurity	Security
 📞 Contact
 For questions or support, please contact the team through GitHub Issues or reach out to your team lead.
