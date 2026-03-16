@@ -147,46 +147,67 @@ API_URL=[http://localhost:5000/api](http://localhost:5000/api)
 MAPS_API_KEY=your-google-maps-key
 
 📚 API Documentation
-Authentication Endpoints
+# 📚 API Documentation
 
-Method Endpoint Description
-POST /api/auth/register Register new user
-POST /api/auth/login Login and get tokens
-POST /api/auth/refresh Refresh access token
-GET /api/auth/me Get current user
-POST /api/auth/logout Logout
-GET /api/auth/companies Get companies
-GET /api/health Health check
-  
-### Job Management Endpoints
+## Table of Contents
+- [Authentication Endpoints](#authentication-endpoints)
+- [Job Management Endpoints](#job-management-endpoints)
+- [Anomaly Management Endpoints](#anomaly-management-endpoints)
+- [🧪 Testing](#🧪-testing)
+  - [Backend Tests](#backend-tests)
+  - [Frontend Tests (Web)](#frontend-tests-web)
+- [📱 Postman Collection](#📱-postman-collection)
+- [🔑 Test Credentials](#🔑-test-credentials)
+- [📊 Sprint Timeline](#📊-sprint-timeline)
+- [🤝 Contributing](#🤝-contributing)
+  - [Development Standards](#development-standards)
+  - [Git Workflow](#git-workflow)
+- [📝 Known Limitations](#📝-known-limitations)
+- [🔒 Intellectual Property Notice](#🔒-intellectual-property-notice)
+- [📄 License](#📄-license)
+- [👨‍💻 Team](#👨‍💻-team)
+- [📞 Contact](#📞-contact)
 
-Method Endpoint Description
-GET /api/jobs/assigned Get assigned jobs
-GET /api/jobs/:id Get job details
-POST /api/jobs/:id/start Start job
-POST /api/jobs/:id/complete Complete job
-POST /api/jobs/:submission_id/photos Upload photos
-POST /api/jobs/offline/submit Submit offline job
-GET /api/jobs/history Get job history
-  
-### Anomaly Management Endpoints
+## Authentication Endpoints
 
-Method Endpoint Description
-GET /api/anomalies List anomalies
-GET /api/anomalies/stats Get anomaly statistics
-GET /api/anomalies/:id Get anomaly details
-POST /api/anomalies/:id/review Review anomaly
+| Method | Endpoint                     | Description                      |
+|--------|------------------------------|----------------------------------|
+| POST   | `/api/auth/register`         | Register new user                |
+| POST   | `/api/auth/login`            | Login and get tokens             |
+| POST   | `/api/auth/refresh`          | Refresh access token             |
+| GET    | `/api/auth/me`               | Get current user                 |
+| POST   | `/api/auth/logout`           | Logout                           |
+| GET    | `/api/auth/companies`        | Get companies                    |
+| GET    | `/api/health`                | Health check                     |
 
-### 🧪 Testing
+## Job Management Endpoints
 
-#### Backend Tests
+| Method | Endpoint                     | Description                      |
+|--------|------------------------------|----------------------------------|
+| GET    | `/api/jobs/assigned`         | Get assigned jobs                |
+| GET    | `/api/jobs/:id`              | Get job details                  |
+| POST   | `/api/jobs/:id/start`        | Start job                        |
+| POST   | `/api/jobs/:id/complete`     | Complete job                     |
+| POST   | `/api/jobs/:submission_id/photos` | Upload photos               |
+| POST   | `/api/jobs/offline/submit`   | Submit offline job               |
+| GET    | `/api/jobs/history`          | Get job history                  |
 
-bash
+## Anomaly Management Endpoints
 
+| Method | Endpoint                     | Description                      |
+|--------|------------------------------|----------------------------------|
+| GET    | `/api/anomalies`             | List anomalies                   |
+| GET    | `/api/anomalies/stats`       | Get anomaly statistics           |
+| GET    | `/api/anomalies/:id`         | Get anomaly details              |
+| POST   | `/api/anomalies/:id/review`  | Review anomaly                   |
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
 # Run all tests
-
 pytest
-
 
 # Run with coverage
 pytest --cov=app tests/
@@ -196,107 +217,124 @@ python -m unittest tests/test_auth.py
 
 # Load testing
 locust -f locustfile.py
+
 # Run unit tests
 # Run e2e tests (Detox)
 npm run e2e:ios
+```
 
-#### Frontend Tests (Web)
-bash
+### Frontend Tests (Web)
+
+```bash
 npm test
+```
 
-  
-### 📱 Postman Collection
-Import the Field_Contractor_Auth.postman_collection.json file into Postman to test all endpoints.
+## 📱 Postman Collection
 
-refresh_token: (auto-populated after login)
+Import the `Field_Contractor_Auth.postman_collection.json` file into Postman to test all endpoints.
+
+**refresh_token:** (auto-populated after login)
 
 ### Register Contractor
-json
 
+```json
 POST {{base_url}}/api/auth/register
 {
     "username": "test_contractor",
     "email": "contractor@test.com",
-git clone https://github.com/your-org/field-contractor-mobile.git
-cd field-contractor-mobile
     "password": "password123",
     "first_name": "Test",
     "last_name": "Contractor",
     "role": "field_contractor",
     "company_id": 2
 }
-Login
-json
+```
+
+### Login
+
+```json
 POST {{base_url}}/api/auth/login
 {
     "username": "john_doe",
     "password": "password123"
 }
+```
 
-🔑 Test Credentials
-After running seed.py:
+## 🔑 Test Credentials
 
-Contractors
-john_doe / password123
-git clone https://github.com/your-org/field-contractor-web.git
-cd field-contractor-web
+After running `seed.py`:
 
-jane_smith / password123
+### Contractors
 
-bob_wilson / password123
+- john_doe / password123
+- jane_smith / password123
+- bob_wilson / password123
 
-Vendor Manager
-vendor_manager / password123
+### Vendor Manager
 
-Operator Admin
-operator_admin / password123
+- vendor_manager / password123
 
-📊 Sprint Timeline
-Sprint Backend Frontend Focus
-1 Foundation & Database Mobile App Foundation Core Setup
-2 Core Business Models Mobile Job List & Details Data & UI
-3 Job Management API Mobile Job Execution Core Features
-4 Anomaly Detection Engine Mobile Offline Storage Intelligence
-5 Anomaly Management Mobile History & Profile Management
-6 Dashboard APIs Contractor Web Dashboard Analytics
-7 Notification System Operator/Vendor Dashboard Enterprise
-8 Security & Deployment Testing & Polish Production
+### Operator Admin
 
-🤝 Contributing
-Development Standards
-Write clean, readable, and modular code
-Use clear naming conventions
-Remove unused files, variables, and console logs
-Follow consistent formatting and linting practices
-Write meaningful commit messages
-Keep branches organized and avoid pushing broken code to main
-Review teammate pull requests respectfully and constructively
+- operator_admin / password123
 
-Git Workflow
-Create feature branch from main
-Implement changes with clear commits
-Push branch and create PR
-Request review from team members
-Address feedback and merge
+## 📊 Sprint Timeline
 
-📝 Known Limitations
-Sprint 1: Only authentication and basic user management completed
-Offline Sync: Full implementation scheduled for Sprint 4
-Push Notifications: Scheduled for Sprint 7
-Real-time Updates: WebSocket implementation optional for Sprint 7
+| Sprint | Backend Focus                  | Frontend Focus                    |
+| ------ | ------------------------------ | --------------------------------- |
+| 1      | Foundation & Database          | Mobile App Foundation             |
+| 2      | Core Business Models           | Mobile Job List & Details         |
+| 3      | Job Management API             | Mobile Job Execution              |
+| 4      | Anomaly Detection Engine       | Mobile Offline Storage            |
+| 5      | Anomaly Management             |Mobile History & Profile Management|
+| 6      | Dashboard APIs                 | Contractor Web Dashboard          |
+| 7      | Notification System            | Operator/Vendor Dashboard         |
+| 8      | Security & Deployment          | Testing & Polish                  |
 
-🔒 Intellectual Property Notice
+## 🤝 Contributing
+
+### Development Standards
+
+- Write clean, readable, and modular code.
+- Use clear naming conventions.
+- Remove unused files, variables, and console logs.
+- Follow consistent formatting and linting practices.
+- Write meaningful commit messages.
+- Keep branches organized and avoid pushing broken code to main.
+- Review teammate pull requests respectfully and constructively.
+
+### Git Workflow
+
+1. Create feature branch from main.
+2. Implement changes with clear commits.
+3. Push branch and create PR.
+4. Request review from team members.
+5. Address feedback and merge.
+
+## 📝 Known Limitations
+
+- **Sprint 1:** Only authentication and basic user management completed.
+- **Offline Sync:** Full implementation scheduled for Sprint 4.
+- **Push Notifications:** Scheduled for Sprint 7.
+- **Real-time Updates:** WebSocket implementation optional for Sprint 7.
+
+## 🔒 Intellectual Property Notice
+
 This project was created as part of a Coding Temple Tech Residency. All work produced during the residency is considered the intellectual property of Coding Temple or the sponsoring employer, unless otherwise stated in a signed agreement. By contributing to this project, you acknowledge and agree to these terms.
 
-📄 License
+## 📄 License
+
 Copyright © 2026 Coding Temple. All rights reserved.
 
-👨‍💻 Team
-Name Role Focus
-Justin Wold Full Stack Backend Head
-Aldo Emmanuel Pena Herrera Full Stack Backend
-Charlie Estrada Full Stack Frontend Head
-Hector Gomez Cybersecurity Security
+## 👨‍💻 Team
 
-📞 Contact
+| Name                          | Role                       |
+|-------------------------------|----------------------------|
+| Justin Wold                   | Full Stack Backend Head    |
+| Aldo Emmanuel Pena Herrera    | Full Stack Backend         |
+| Charlie Estrada               | Full Stack Frontend Head   |
+| Hector Gomez                  | Cybersecurity              |
+
+## 📞 Contact
+
 For questions or support, please contact the team through GitHub Issues or reach out to your team lead.
