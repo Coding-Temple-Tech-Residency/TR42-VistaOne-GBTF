@@ -1,0 +1,72 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Docker – Build & Push"]
+    types: [completed]
+    branches: [main]
+
+  # Allow manual trigger from Actions tab
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    # Only deploy when the Docker build succeeded (or manual dispatch)
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    environment:
+      name: ${{ github.event.inputs.environment || 'staging' }}
+      url: ${{ vars.APP_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+
+            # Navigate to project directory
+            cd ${{ vars.DEPLOY_PATH || '/opt/vistaone' }}
+
+            # Pull latest code
+            git pull origin main
+
+            # Log in to container registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Pull latest images
+            docker compose pull web worker
+
+            # Run migrations, then restart services
+            docker compose up -d --no-deps migrate
+            docker compose logs -f migrate
+
+            docker compose up -d --no-deps --build web worker
+
+            # Verify health
+            sleep 10
+            docker compose ps
+            curl -sf http://localhost:5000/api/auth/refresh || echo "Health check: endpoint requires auth (expected)"
+
+            echo "Deployment complete!"

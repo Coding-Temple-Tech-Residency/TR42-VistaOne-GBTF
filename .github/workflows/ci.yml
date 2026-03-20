@@ -1,0 +1,117 @@
+name: CI – Lint, Type-check & Test
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci.yml"
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  # ────────────────────────── Lint ──────────────────────────
+  lint:
+    name: Flake8
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: pip install flake8
+
+      - run: flake8 app/ --max-line-length=99 --count --show-source --statistics
+
+  # ────────────────────────── Type check ──────────────────────────
+  typecheck:
+    name: mypy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: |
+          pip install -r requirements.txt
+          pip install mypy
+
+      - run: mypy app/
+
+  # ────────────────────────── Tests ──────────────────────────
+  test:
+    name: Pytest
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          POSTGRES_DB: vistaone_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d vistaone_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    env:
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      JWT_SECRET_KEY: ci-test-jwt-key-not-for-production
+      DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/vistaone_test
+      TEST_DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/vistaone_test
+      REDIS_URL: redis://localhost:6379/0
+      CELERY_BROKER_URL: redis://localhost:6379/1
+      CELERY_RESULT_BACKEND: redis://localhost:6379/1
+      FLASK_ENV: testing
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - run: pytest tests/ --cov=app --cov-report=term --cov-report=xml:coverage.xml -v
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
+          retention-days: 14
