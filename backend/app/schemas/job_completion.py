@@ -38,7 +38,7 @@ class JobCompletionSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 
-    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride] # type: ignore # type: ignore # type: ignore
+    class Meta:  # type: ignore[override]
         model = JobCompletion
 
     @post_load

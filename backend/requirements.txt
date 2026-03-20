@@ -13,7 +13,7 @@ marshmallow==3.19.0
 marshmallow-sqlalchemy==0.29.0
 geoalchemy2==0.13.1
 requests==2.31.0
-Werkzeug==2.3.6
+werkzeug==3.1.0
 redis==4.6.0
 celery==5.3.1
 gunicorn==21.2.0

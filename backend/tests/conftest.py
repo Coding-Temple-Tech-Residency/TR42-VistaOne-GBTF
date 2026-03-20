@@ -1,21 +1,20 @@
 import sys
+import uuid
 from pathlib import Path
 
+# Must insert backend/ onto sys.path before importing app modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import TestingConfig
-from app.extensions import db as _db
-from app import create_app
-from sqlalchemy import text
-from flask_jwt_extended import create_access_token, create_refresh_token
-import pytest
-import uuid
-import os
-import sys
 
-sys.path.insert(
-    0,
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..")),
+import pytest  # noqa: E402
+from flask_jwt_extended import (  # noqa: E402
+    create_access_token,
+    create_refresh_token,
 )
+from sqlalchemy import text  # noqa: E402
+
+from app import create_app  # noqa: E402
+from app.extensions import db as _db  # noqa: E402
+from config import TestingConfig  # noqa: E402
 
 
 # -------------------- Core fixtures --------------------
