@@ -18,5 +18,5 @@ redis==4.6.0
 celery==5.3.1
 gunicorn==21.2.0
 types-Flask-Cors==6.0.0.20250520
-types-requests==2.32.4
+types-requests==2.31.0.8
 types-html5lib==1.1.11
