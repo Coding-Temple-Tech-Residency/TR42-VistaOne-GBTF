@@ -38,7 +38,8 @@ class JobCompletionSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 
-    class Meta:  # type: ignore[override]
+    class Meta:  # type: ignore
+
         model = JobCompletion
 
     @post_load
