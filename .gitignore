@@ -147,6 +147,7 @@ yarn-error.log*
 /MobileApp/android/keystores/debug.keystore
 
 # React Native specific
+/MobileApp/
 /MobileApp/.buckconfig
 /MobileApp/.flowconfig
 /MobileApp/.watchmanconfig
