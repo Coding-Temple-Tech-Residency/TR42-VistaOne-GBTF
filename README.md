@@ -7,7 +7,6 @@ The Field Contractor app solves the critical problem of inefficiency, lack of tr
 - **Laborious and error-prone** - Paper tickets get lost, damaged, or illegible
 - **Difficult to verify** - No way to confirm work was actually performed at the correct location
 - **Vulnerable to fraud** - Phantom employees, inflated hours, and false billing are hard to detect
-- **Expensive** - Existing solutions require $8,000+ hardware or expensive enterprise software
 
 Our solution digitizes the entire workflow using standard smartphones, making it affordable and accessible.
 
