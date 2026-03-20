@@ -52,6 +52,9 @@ jobs:
   test:
     name: Pytest
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/vistaone_test   # <-- Add this
     services:
       postgres:
         image: postgis/postgis:16-3.4
@@ -66,15 +69,7 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
+      # ... redis service remains unchanged
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
