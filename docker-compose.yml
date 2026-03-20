@@ -1,0 +1,97 @@
+services:
+  # ---------- PostgreSQL + PostGIS ----------
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vistaone
+      POSTGRES_PASSWORD: vistaone_dev
+      POSTGRES_DB: vistaone_gbtf
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vistaone -d vistaone_gbtf"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------- Redis ----------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------- Flask web server ----------
+  web:
+    build:
+      context: ./backend
+      target: web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ---------- Run migrations (one-shot) ----------
+  migrate:
+    build:
+      context: ./backend
+      target: base
+    command: flask db upgrade head
+    env_file:
+      - ./backend/.env
+    environment:
+      FLASK_APP: run.py
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ---------- Celery worker ----------
+  worker:
+    build:
+      context: ./backend
+      target: worker
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  redisdata:
