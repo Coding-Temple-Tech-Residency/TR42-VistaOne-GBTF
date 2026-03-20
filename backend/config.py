@@ -62,8 +62,8 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "TEST_DATABASE_URL",
-        os.environ.get("DATABASE_URL", ""),
+        "DATABASE_URL",
+        "postgresql://test_user:test_pass@localhost:5432/vistaone_test"
     )
     CORS_ORIGINS = ["*"]
     CACHE_TYPE = "SimpleCache"
