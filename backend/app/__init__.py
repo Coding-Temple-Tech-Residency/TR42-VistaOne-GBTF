@@ -1,4 +1,5 @@
 import os
+from typing import Type
 
 from flask import Flask
 from flask_cors import CORS
@@ -8,14 +9,16 @@ from app.middleware.error_handler import register_error_handlers
 from celery_app import init_celery
 from config import DevelopmentConfig, ProductionConfig, TestingConfig
 
-_config_map = {
+_config_map: dict[str, Type[DevelopmentConfig | ProductionConfig | TestingConfig]] = {
     "development": DevelopmentConfig,
     "production": ProductionConfig,
     "testing": TestingConfig,
 }
 
 
-def create_app(config_object=None):
+def create_app(
+    config_object: Type[DevelopmentConfig | ProductionConfig | TestingConfig] | None = None,
+):
     app = Flask(__name__)
     if config_object is None:
         env = os.environ.get("FLASK_ENV", "development")

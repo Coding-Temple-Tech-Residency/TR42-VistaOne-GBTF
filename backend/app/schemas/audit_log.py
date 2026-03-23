@@ -7,9 +7,7 @@ class AuditLogSchema(Schema):
     audit_id = fields.UUID(dump_only=True)
     table_name = fields.Str(required=True)
     record_id = fields.UUID(required=True)
-    action = fields.Str(
-        required=True, validate=validate.OneOf(["INSERT", "UPDATE", "DELETE"])
-    )
+    action = fields.Str(required=True, validate=validate.OneOf(["INSERT", "UPDATE", "DELETE"]))
 
     contractor_id = fields.UUID()
     session_id = fields.UUID()

@@ -6,25 +6,21 @@ from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from app.extensions import db
 from app.models.enums import AccountStatus
 from app.models.mixins import SoftDeleteMixin, TimestampMixin
-from app.models.types import (
-    Email,
-    PercentValue,
-    PhoneNumber,
-    RatingValue,
-    SSNLastFour,
-)
+from app.models.types import Email, PercentValue, PhoneNumber, RatingValue, SSNLastFour
 
 
 class Contractor(db.Model, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "contractors"
 
     contractor_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = db.Column(db.String(64), nullable=False, unique=True)
+    email = db.Column(Email, nullable=False, unique=True)
+    password_hash = db.Column(db.String(128), nullable=False)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     middle_initial = db.Column(db.String(1))
     date_of_birth = db.Column(db.Date)
     ssn_last_four = db.Column(SSNLastFour)
-    email = db.Column(Email, nullable=False, unique=True)
     personal_phone = db.Column(PhoneNumber)
     alternate_phone = db.Column(PhoneNumber)
     address_street = db.Column(db.String(255))
@@ -33,6 +29,8 @@ class Contractor(db.Model, TimestampMixin, SoftDeleteMixin):
     address_zip = db.Column(db.String(20))
     address_country = db.Column(db.String(100), default="USA")
     profile_photo_url = db.Column(db.Text)
+    company_name = db.Column(db.String(255))
+    employee_id = db.Column(db.String(64))
 
     # Professional info
     years_experience = db.Column(db.Integer)
@@ -54,9 +52,7 @@ class Contractor(db.Model, TimestampMixin, SoftDeleteMixin):
     account_status = db.Column(db.Enum(AccountStatus), default=AccountStatus.active)
     account_verified = db.Column(db.Boolean, default=False)
     account_verified_at = db.Column(db.DateTime, server_default=func.now())
-    last_login_at = db.Column(
-        db.DateTime, server_default=func.now(), onupdate=func.now()
-    )
+    last_login_at = db.Column(db.DateTime, server_default=func.now(), onupdate=func.now())
 
     # Preferences
     language_preference = db.Column(db.String(50), default="en")

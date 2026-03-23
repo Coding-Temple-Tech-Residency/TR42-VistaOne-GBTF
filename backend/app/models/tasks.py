@@ -29,9 +29,7 @@ class Task(db.Model, TimestampMixin):
     is_required = db.Column(db.Boolean, default=True)
     is_milestone = db.Column(db.Boolean, default=False)
 
-    assigned_to = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("contractors.contractor_id")
-    )
+    assigned_to = db.Column(UUID(as_uuid=True), db.ForeignKey("contractors.contractor_id"))
     assigned_at = db.Column(db.DateTime(timezone=True))
 
     task_status = db.Column(db.Enum(TaskStatus), default=TaskStatus.pending)
@@ -76,16 +74,10 @@ class Task(db.Model, TimestampMixin):
         ),
         db.Index("idx_tasks_parent", parent_task_id),
         db.Index("idx_tasks_assigned", assigned_to),
+        db.CheckConstraint("estimated_duration_minutes >= 0", name="estimated_duration_positive"),
+        db.CheckConstraint("actual_duration_minutes >= 0", name="actual_duration_positive"),
         db.CheckConstraint(
-            "estimated_duration_minutes >= 0", name="estimated_duration_positive"
-        ),
-        db.CheckConstraint(
-            "actual_duration_minutes >= 0", name="actual_duration_positive"
-        ),
-        db.CheckConstraint(
-            "(started_at IS NULL OR "
-            "completed_at IS NULL OR "
-            "started_at <= completed_at)",
+            "(started_at IS NULL OR " "completed_at IS NULL OR " "started_at <= completed_at)",
             name="valid_task_dates",
         ),
     )

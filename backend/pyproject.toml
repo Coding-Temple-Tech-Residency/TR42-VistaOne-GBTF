@@ -1,0 +1,21 @@
+[tool.black]
+line-length = 99
+target-version = ["py312"]
+extend-exclude = '''
+/(
+    migrations
+  | build
+  | dist
+  | \.venv
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 99
+skip_gitignore = true
+skip_glob = ["migrations/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

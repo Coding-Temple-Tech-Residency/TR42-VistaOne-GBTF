@@ -10,9 +10,7 @@ class JobAssignmentSchema(Schema):
     assigned_at = fields.DateTime()
     assigned_role = fields.Str()
     is_primary = fields.Bool()
-    assignment_status = fields.Str(
-        validate=validate.OneOf(["active", "completed", "removed"])
-    )
+    assignment_status = fields.Str(validate=validate.OneOf(["active", "completed", "removed"]))
     unassigned_at = fields.DateTime()
     unassigned_reason = fields.Str()
     notes = fields.Str()

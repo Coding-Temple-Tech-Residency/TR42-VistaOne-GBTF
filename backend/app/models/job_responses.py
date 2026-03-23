@@ -56,9 +56,7 @@ class JobResponse(db.Model, TimestampMixin):
     )
 
     __table_args__ = (
-        db.UniqueConstraint(
-            "job_id", "contractor_id", name="unique_job_contractor_response"
-        ),
+        db.UniqueConstraint("job_id", "contractor_id", name="unique_job_contractor_response"),
         db.Index("idx_responses_job", job_id, response_type),
         db.Index("idx_responses_contractor", contractor_id),
         db.Index(

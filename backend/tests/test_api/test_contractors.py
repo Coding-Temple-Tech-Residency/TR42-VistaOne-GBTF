@@ -22,6 +22,28 @@ def test_update_me(client, contractor_headers, test_contractor):
     from app.extensions import db
     from app.models.contractors import Contractor
 
-    with db.session() as session:
-        updated = session.get(Contractor, test_contractor.contractor_id)
-        assert updated.first_name == new_name  # type: ignore
+    db.session.expire_all()
+    updated = db.session.get(Contractor, test_contractor.contractor_id)
+    assert updated.first_name == new_name  # type: ignore
+
+
+def test_update_me_nonexistent_field(client, contractor_headers):
+    resp = client.put(
+        "/api/contractors/me",
+        headers=contractor_headers,
+        json={"not_a_field": "value"},
+    )
+    # Should ignore or not error
+    assert resp.status_code == 200
+
+
+def test_get_me_unauthenticated(client):
+    """Test GET /api/contractors/me without auth returns 401."""
+    resp = client.get("/api/contractors/me")
+    assert resp.status_code == 401
+
+
+def test_update_me_unauthenticated(client):
+    """Test PUT /api/contractors/me without auth returns 401."""
+    resp = client.put("/api/contractors/me", json={"first_name": "X"})
+    assert resp.status_code == 401

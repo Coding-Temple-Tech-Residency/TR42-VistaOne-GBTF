@@ -26,11 +26,11 @@ def upgrade():
     # -------------------- CUSTOM DOMAINS --------------------
     op.execute("""
         CREATE DOMAIN phone_number AS VARCHAR(20)
-        CHECK (VALUE ~ '^\\+?[0-9\\-\\(\\)\\s]{10,20}$');
+        CHECK (VALUE ~ '^\\\+?[0-9\\\-\\\(\\\)\\\s]{10,20}$');
     """)
     op.execute("""
         CREATE DOMAIN email_address AS VARCHAR(255)
-        CHECK (VALUE ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$');
+        CHECK (VALUE ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\\.[A-Za-z]{2,}$');
     """)
     op.execute("""
         CREATE DOMAIN ssn_last_four AS CHAR(4)

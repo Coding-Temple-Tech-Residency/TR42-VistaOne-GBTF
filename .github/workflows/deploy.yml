@@ -6,7 +6,6 @@ on:
     types: [completed]
     branches: [main]
 
-  # Allow manual trigger from Actions tab
   workflow_dispatch:
     inputs:
       environment:
@@ -26,7 +25,6 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    # Only deploy when the Docker build succeeded (or manual dispatch)
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
@@ -46,27 +44,21 @@ jobs:
           script: |
             set -e
 
-            # Navigate to project directory
             cd ${{ vars.DEPLOY_PATH || '/opt/vistaone' }}
-
-            # Pull latest code
             git pull origin main
 
-            # Log in to container registry
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Pull latest images
+            export WEB_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-web:latest"
+            export WORKER_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-worker:latest"
+            export MIGRATE_IMAGE="$WEB_IMAGE"
+
             docker compose pull web worker
+            docker compose run --rm migrate
+            docker compose up -d --no-deps web worker
 
-            # Run migrations, then restart services
-            docker compose up -d --no-deps migrate
-            docker compose logs -f migrate
-
-            docker compose up -d --no-deps --build web worker
-
-            # Verify health
             sleep 10
             docker compose ps
-            curl -sf http://localhost:5000/api/auth/refresh || echo "Health check: endpoint requires auth (expected)"
+            curl -sf http://localhost:5000/health
 
             echo "Deployment complete!"

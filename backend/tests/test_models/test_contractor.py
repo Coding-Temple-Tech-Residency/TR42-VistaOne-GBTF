@@ -9,9 +9,7 @@ def test_create_contractor(app):
     """Test creating a contractor and setting password."""
     with app.app_context():
         c = Contractor(
-            first_name="Test",
-            last_name="User",
-            email="test2@example.com",
+            first_name="Test", last_name="User", email="test2@example.com", username="testuser1"
         )
         set_password(c, "password123")
         db.session.add(c)
@@ -27,9 +25,7 @@ def test_contractor_email_unique_constraint(app):
     """Test that duplicate emails are rejected."""
     with app.app_context():
         c1 = Contractor(
-            first_name="One",
-            last_name="User",
-            email="unique@example.com",
+            first_name="One", last_name="User", email="unique@example.com", username="uniqueuser1"
         )
         set_password(c1, "pass")
         db.session.add(c1)
@@ -39,6 +35,7 @@ def test_contractor_email_unique_constraint(app):
             first_name="Two",
             last_name="User",
             email="unique@example.com",
+            username="uniqueuser2",
         )
         set_password(c2, "pass")
         db.session.add(c2)

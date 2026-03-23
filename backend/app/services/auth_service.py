@@ -1,13 +1,16 @@
-from werkzeug.security import check_password_hash, generate_password_hash
+import bcrypt
 
 
 def hash_password(password: str) -> str:
-    return generate_password_hash(password, method="scrypt")
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
 def verify_password(contractor, password: str) -> bool:
-    return check_password_hash(contractor.password_hash, password)
+    if not contractor.password_hash:
+        return False
+    return bcrypt.checkpw(password.encode("utf-8"), contractor.password_hash.encode("utf-8"))
 
 
 def set_password(contractor, password: str) -> None:
-    contractor.password_hash = generate_password_hash(password, method="scrypt")
+    contractor.password_hash = hash_password(password)

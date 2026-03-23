@@ -7,9 +7,7 @@ from app.models.vendor_sync_queue import VendorSyncQueue
 class VendorSyncQueueSchema(Schema):
     sync_id = fields.UUID(dump_only=True)
     vendor_id = fields.UUID(required=True)
-    direction = fields.Str(
-        required=True, validate=validate.OneOf(["inbound", "outbound"])
-    )
+    direction = fields.Str(required=True, validate=validate.OneOf(["inbound", "outbound"]))
     entity_type = fields.Str(required=True)
     entity_id = fields.UUID()
     vendor_entity_id = fields.Str()

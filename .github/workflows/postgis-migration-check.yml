@@ -1,0 +1,25 @@
+name: Check Alembic Migrations for PostGIS Safety
+
+on:
+  push:
+    paths:
+      - 'backend/migrations/versions/*.py'
+  pull_request:
+    paths:
+      - 'backend/migrations/versions/*.py'
+
+jobs:
+  postgis-migration-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check for forbidden spatial_ref_sys operations
+        run: |
+          forbidden=$(grep -nE "op\.(drop_table|create_table)\(['\"]spatial_ref_sys['\"]" backend/migrations/versions/*.py || true)
+          if [ -n "$forbidden" ]; then
+            echo "\033[91mERROR: Forbidden operation on spatial_ref_sys found in migration scripts:\033[0m"
+            echo "$forbidden"
+            echo "Please comment out or remove these lines before merging. See POSTGIS_MIGRATION_WORKFLOW.md for details."
+            exit 1
+          fi

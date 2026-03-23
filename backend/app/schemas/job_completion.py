@@ -39,7 +39,6 @@ class JobCompletionSchema(Schema):
     updated_at = fields.DateTime(dump_only=True)
 
     class Meta:  # type: ignore
-
         model = JobCompletion
 
     @post_load

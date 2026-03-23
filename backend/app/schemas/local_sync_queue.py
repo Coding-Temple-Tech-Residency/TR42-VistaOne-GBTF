@@ -12,9 +12,7 @@ class LocalSyncQueueSchema(Schema):
 
     table_name = fields.Str(required=True)
     record_id = fields.UUID(required=True)
-    operation = fields.Str(
-        required=True, validate=validate.OneOf(["INSERT", "UPDATE", "DELETE"])
-    )
+    operation = fields.Str(required=True, validate=validate.OneOf(["INSERT", "UPDATE", "DELETE"]))
     data = fields.Raw()
 
     sync_status = fields.Enum(SyncStatus, by_value=True)

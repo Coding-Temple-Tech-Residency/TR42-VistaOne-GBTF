@@ -1,89 +1,76 @@
+
 import sys
-import uuid
 from pathlib import Path
+import pytest
+from app.extensions import limiter
+from app.extensions import db as _db
+from sqlalchemy import text
+from app import create_app
+from config import TestingConfig
+import uuid
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 # Must insert backend/ onto sys.path before importing app modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import pytest  # noqa: E402
-from flask_jwt_extended import (  # noqa: E402
-    create_access_token,
-    create_refresh_token,
-)
-from sqlalchemy import text  # noqa: E402
 
-from app import create_app  # noqa: E402
-from app.extensions import db as _db  # noqa: E402
-from config import TestingConfig  # noqa: E402
-
+@pytest.fixture(autouse=True)
+def disable_limiter(monkeypatch):
+    monkeypatch.setattr(limiter, "enabled", False)
 
 # -------------------- Core fixtures --------------------
+
+
 @pytest.fixture(scope="session")
 def app():
     """Create and configure a Flask app for testing."""
     app = create_app(TestingConfig)
     with app.app_context():
+        _db.session.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
+        _db.session.commit()
         _db.create_all()
+        # Create default partitions for range-partitioned tables so tests can INSERT rows
+        for tbl, part in [
+            ("vendor_sync_queue", "vendor_sync_queue_default"),
+            ("audit_log", "audit_log_default"),
+            ("local_sync_queue", "local_sync_queue_default"),
+        ]:
+            _db.session.execute(
+                text(f"CREATE TABLE IF NOT EXISTS {part} " f"PARTITION OF {tbl} DEFAULT")
+            )
+        _db.session.commit()
         yield app
         # Teardown: drop policies, views, then tables
+        _db.session.execute(text("DROP POLICY IF EXISTS " "job_access ON jobs CASCADE;"))
         _db.session.execute(
-            text("DROP POLICY IF EXISTS " "job_access ON jobs CASCADE;")
+            text("DROP POLICY IF EXISTS " "contractor_self_access " "ON contractors CASCADE;")
+        )
+        _db.session.execute(
+            text("DROP POLICY IF EXISTS " "site_visits_access " "ON site_visits CASCADE;")
         )
         _db.session.execute(
             text(
-                "DROP POLICY IF EXISTS "
-                "contractor_self_access "
-                "ON contractors CASCADE;"
+                "DROP POLICY IF EXISTS " "progress_updates_access " "ON progress_updates CASCADE;"
             )
         )
+        _db.session.execute(text("DROP POLICY IF EXISTS issues_access ON issues CASCADE;"))
         _db.session.execute(
-            text(
-                "DROP POLICY IF EXISTS " "site_visits_access " "ON site_visits CASCADE;"
-            )
+            text("DROP POLICY IF EXISTS " "task_executions_access " "ON task_executions CASCADE;")
+        )
+        _db.session.execute(text("DROP POLICY IF EXISTS photos_access ON photos CASCADE;"))
+        _db.session.execute(
+            text("DROP POLICY IF EXISTS " "job_completions_access " "ON job_completions CASCADE;")
+        )
+        _db.session.execute(
+            text("DROP POLICY IF EXISTS " "submissions_access " "ON submissions CASCADE;")
         )
         _db.session.execute(
             text(
-                "DROP POLICY IF EXISTS "
-                "progress_updates_access "
-                "ON progress_updates CASCADE;"
-            )
-        )
-        _db.session.execute(
-            text("DROP POLICY IF EXISTS issues_access ON issues CASCADE;")
-        )
-        _db.session.execute(
-            text(
-                "DROP POLICY IF EXISTS "
-                "task_executions_access "
-                "ON task_executions CASCADE;"
-            )
-        )
-        _db.session.execute(
-            text("DROP POLICY IF EXISTS photos_access ON photos CASCADE;")
-        )
-        _db.session.execute(
-            text(
-                "DROP POLICY IF EXISTS "
-                "job_completions_access "
-                "ON job_completions CASCADE;"
-            )
-        )
-        _db.session.execute(
-            text(
-                "DROP POLICY IF EXISTS " "submissions_access " "ON submissions CASCADE;"
-            )
-        )
-        _db.session.execute(
-            text(
-                "DROP POLICY IF EXISTS "
-                "local_sync_queue_access "
-                "ON local_sync_queue CASCADE;"
+                "DROP POLICY IF EXISTS " "local_sync_queue_access " "ON local_sync_queue CASCADE;"
             )
         )
         _db.session.execute(text("DROP VIEW IF EXISTS " "job_status_summary CASCADE;"))
-        _db.session.execute(
-            text("DROP VIEW IF EXISTS " "vendor_sync_status_view CASCADE;")
-        )
+        _db.session.execute(text("DROP VIEW IF EXISTS " "vendor_sync_status_view CASCADE;"))
         _db.session.commit()
         _db.session.remove()
         _db.drop_all()
@@ -106,6 +93,7 @@ def client(app):
 def test_contractor(app):
     """Create a contractor for testing with a unique email."""
     from app.models.contractors import Contractor
+    from app.models.enums import AccountStatus
     from app.services.auth_service import set_password
 
     with app.app_context():
@@ -114,11 +102,15 @@ def test_contractor(app):
             first_name="John",
             last_name="Doe",
             email=unique_email,
+            username=f"johnuser_{uuid.uuid4().hex[:8]}",
+            account_verified=True,
+            account_status=AccountStatus.active,
         )
         set_password(c, "password")
         _db.session.add(c)
         _db.session.commit()
-        # Keep instance attached – do NOT expunge
+        # Refresh from DB to ensure latest state
+        _db.session.refresh(c)
         yield c
         # Cleanup: delete the contractor
         _db.session.commit()
@@ -142,9 +134,7 @@ def contractor_headers(app, test_contractor):
 def refresh_headers(app, test_contractor):
     """Return headers with JWT refresh token for refresh endpoint."""
     with app.app_context():
-        refresh_token = create_refresh_token(
-            identity=str(test_contractor.contractor_id)
-        )
+        refresh_token = create_refresh_token(identity=str(test_contractor.contractor_id))
         return {"Authorization": f"Bearer {refresh_token}"}
 
 
@@ -155,7 +145,7 @@ def test_job(app):
 
     with app.app_context():
         job = Job(
-            job_number="JOB-123",
+            job_number=f"JOB-{uuid.uuid4().hex[:8].upper()}",
             job_name="Test Job",
             status="scheduled",
         )
@@ -205,12 +195,18 @@ def test_issue(app, test_job, test_contractor):
 def test_contractor_with_issues(app):
     """Create a contractor with issues for testing."""
     from app.models.contractors import Contractor
+    from app.models.enums import AccountStatus
     from app.services.auth_service import set_password
 
     with app.app_context():
         unique_email = f"contractor+{uuid.uuid4()}@example.com"
         contractor = Contractor(
-            first_name="Jane", last_name="Smith", email=unique_email
+            first_name="Jane",
+            last_name="Smith",
+            email=unique_email,
+            username=f"janeuser_{uuid.uuid4().hex[:8]}",
+            account_verified=True,
+            account_status=AccountStatus.active,
         )
         set_password(contractor, "password")
         _db.session.add(contractor)
@@ -219,3 +215,70 @@ def test_contractor_with_issues(app):
         # Teardown: only delete the contractor; cascade handles issues
         _db.session.delete(contractor)
         _db.session.commit()
+
+
+@pytest.fixture
+def test_vendor(app):
+    """Create a vendor for testing."""
+    from app.models.vendors import Vendor
+
+    with app.app_context():
+        vendor = Vendor(
+            vendor_code=f"V-{uuid.uuid4().hex[:8].upper()}",
+            vendor_name="Test Vendor",
+            vendor_api_config={
+                "endpoint": "http://vendor.example.com",
+                "apiKey": "test-key",
+            },
+        )
+        _db.session.add(vendor)
+        _db.session.commit()
+        yield vendor
+        try:
+            _db.session.delete(vendor)
+            _db.session.commit()
+        except Exception:
+            _db.session.rollback()
+
+
+@pytest.fixture
+def test_task(app, test_job):
+    """Create a task linked to test_job for testing."""
+    from app.models.tasks import Task
+
+    with app.app_context():
+        task = Task(
+            job_id=test_job.job_id,
+            task_name="Test Task",
+        )
+        _db.session.add(task)
+        _db.session.commit()
+        yield task
+        try:
+            _db.session.delete(task)
+            _db.session.commit()
+        except Exception:
+            _db.session.rollback()
+
+
+@pytest.fixture
+def test_visit(app, test_job, test_contractor):
+    """Create a site visit for testing."""
+    from datetime import datetime, timezone
+
+    from app.models.site_visits import SiteVisit
+
+    with app.app_context():
+        visit = SiteVisit(
+            job_id=test_job.job_id,
+            contractor_id=test_contractor.contractor_id,
+            check_in_time=datetime.now(timezone.utc),
+        )
+        _db.session.add(visit)
+        _db.session.commit()
+        yield visit
+        try:
+            _db.session.delete(visit)
+            _db.session.commit()
+        except Exception:
+            _db.session.rollback()

@@ -22,20 +22,16 @@ def process_vendor_sync_queue():
         .all()
     )
     for item in items:
-        vendor = Vendor.query.get(item.vendor_id)
+        vendor = db.session.get(Vendor, item.vendor_id)
         if not vendor:
-            logger.warning(
-                "Vendor %s not found for sync item %s", item.vendor_id, item.id
-            )
+            logger.warning("Vendor %s not found for sync item %s", item.vendor_id, item.id)
             continue
         try:
             transformed = transform_payload(item.entity_type, item.payload)
             resp = requests.post(
                 f"{vendor.vendor_api_config['endpoint']}/sync",
                 json=transformed,
-                headers={
-                    "Authorization": (f"Bearer {vendor.vendor_api_config['apiKey']}")
-                },
+                headers={"Authorization": (f"Bearer {vendor.vendor_api_config['apiKey']}")},
                 timeout=30,
             )
             if resp.status_code == 200:

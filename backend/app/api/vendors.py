@@ -24,7 +24,7 @@ def get_vendors():
 @bp.route("/<uuid:vendor_id>", methods=["GET"])
 @jwt_required()
 def get_vendor(vendor_id):
-    vendor = Vendor.query.get_or_404(vendor_id)
+    vendor = db.get_or_404(Vendor, vendor_id)
     schema = VendorSchema()
     return jsonify(schema.dump(vendor))
 
@@ -47,19 +47,21 @@ def create_vendor():
 @bp.route("/<uuid:vendor_id>", methods=["PUT"])
 @jwt_required()
 def update_vendor(vendor_id):
-    vendor = Vendor.query.get_or_404(vendor_id)
+    vendor = db.get_or_404(Vendor, vendor_id)
     schema = VendorSchema(partial=True)
     data = request.get_json()
-    updated = schema.load(data, instance=vendor, partial=True)  # type: ignore
+    validated = schema.load(data, partial=True)
+    for key in data:
+        setattr(vendor, key, getattr(validated, key))
     db.session.commit()
     cache.clear()
-    return jsonify(schema.dump(updated))
+    return jsonify(schema.dump(vendor))
 
 
 @bp.route("/<uuid:vendor_id>", methods=["DELETE"])
 @jwt_required()
 def delete_vendor(vendor_id):
-    vendor = Vendor.query.get_or_404(vendor_id)
+    vendor = db.get_or_404(Vendor, vendor_id)
     vendor.is_active = False
     db.session.commit()
     cache.clear()
@@ -70,7 +72,7 @@ def delete_vendor(vendor_id):
 @bp.route("/<uuid:vendor_id>/sync", methods=["POST"])
 @jwt_required()
 def sync_vendor(vendor_id):
-    Vendor.query.get_or_404(vendor_id)
+    db.get_or_404(Vendor, vendor_id)
     trigger_vendor_sync_task.delay(str(vendor_id))  # type: ignore
     logger.info("Vendor sync triggered: %s", vendor_id)
     return jsonify({"message": "Sync started"})

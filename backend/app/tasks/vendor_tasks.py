@@ -1,5 +1,5 @@
-from celery_app import celery
 from app.utils.logger import get_logger
+from celery_app import celery
 
 logger = get_logger("tasks.vendor_sync")
 

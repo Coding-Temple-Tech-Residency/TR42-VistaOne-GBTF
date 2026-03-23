@@ -65,9 +65,7 @@ class Job(db.Model, TimestampMixin, SoftDeleteMixin):
 
     # Sync tracking
     last_synced_with_vendor_at = db.Column(db.DateTime(timezone=True))
-    vendor_sync_status = db.Column(
-        db.Enum(VendorSyncStatus), default=VendorSyncStatus.pending
-    )
+    vendor_sync_status = db.Column(db.Enum(VendorSyncStatus), default=VendorSyncStatus.pending)
     vendor_data = db.Column(JSONB)
 
     # Search vector (managed by DB)
@@ -87,9 +85,7 @@ class Job(db.Model, TimestampMixin, SoftDeleteMixin):
     job_responses = db.relationship(
         "JobResponse", back_populates="job", cascade="all, delete-orphan"
     )
-    site_visits = db.relationship(
-        "SiteVisit", back_populates="job", cascade="all, delete-orphan"
-    )
+    site_visits = db.relationship("SiteVisit", back_populates="job", cascade="all, delete-orphan")
     progress_updates = db.relationship(
         "ProgressUpdate", back_populates="job", cascade="all, delete-orphan"
     )
@@ -101,21 +97,15 @@ class Job(db.Model, TimestampMixin, SoftDeleteMixin):
     task_executions = db.relationship(
         "TaskExecution", back_populates="job", cascade="all, delete-orphan"
     )
-    issues = db.relationship(
-        "Issue", back_populates="job", cascade="all, delete-orphan"
-    )
-    photos = db.relationship(
-        "Photo", back_populates="job", cascade="all, delete-orphan"
-    )
+    issues = db.relationship("Issue", back_populates="job", cascade="all, delete-orphan")
+    photos = db.relationship("Photo", back_populates="job", cascade="all, delete-orphan")
     job_completion = db.relationship(
         "JobCompletion",
         back_populates="job",
         uselist=False,
         cascade="all, delete-orphan",
     )
-    submissions = db.relationship(
-        "Submission", back_populates="job", cascade="all, delete-orphan"
-    )
+    submissions = db.relationship("Submission", back_populates="job", cascade="all, delete-orphan")
     contractor_sessions = db.relationship("ContractorSession", back_populates="job")
 
     __table_args__ = (

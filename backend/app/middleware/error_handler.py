@@ -18,7 +18,6 @@ def _error_response(message, status_code, details=None):
 
 
 def register_error_handlers(app):
-
     @app.errorhandler(ValidationError)
     def handle_validation_error(e):
         logger.info("Validation error: %s", e.messages)

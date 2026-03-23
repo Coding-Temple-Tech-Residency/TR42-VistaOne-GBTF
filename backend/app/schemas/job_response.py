@@ -20,9 +20,7 @@ class JobResponseSchema(Schema):
     job_declined = fields.Bool()
     job_declined_reason = fields.Str()
     job_declined_category = fields.Str(
-        validate=validate.OneOf(
-            ["schedule", "distance", "skills", "equipment", "other"]
-        )
+        validate=validate.OneOf(["schedule", "distance", "skills", "equipment", "other"])
     )
     job_declined_at = fields.DateTime()
     counter_offer_amount = fields.Decimal(as_string=True, places=2)

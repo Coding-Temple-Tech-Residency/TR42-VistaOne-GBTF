@@ -21,9 +21,7 @@ class JobAssignment(db.Model, TimestampMixin):
         db.ForeignKey("contractors.contractor_id", ondelete="CASCADE"),
         nullable=False,
     )
-    assigned_at = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
+    assigned_at = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
     assigned_role = db.Column(db.String(100))
     is_primary = db.Column(db.Boolean, default=False)
     assignment_status = db.Column(db.String(50), default="active")

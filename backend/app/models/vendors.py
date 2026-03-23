@@ -17,9 +17,7 @@ class Vendor(db.Model, TimestampMixin):
     webhook_url = db.Column(db.Text)
     sync_frequency_minutes = db.Column(db.Integer, default=60)
     last_sync_at = db.Column(db.DateTime(timezone=True))
-    last_sync_status = db.Column(
-        db.Enum(VendorSyncStatus), default=VendorSyncStatus.pending
-    )
+    last_sync_status = db.Column(db.Enum(VendorSyncStatus), default=VendorSyncStatus.pending)
     sync_error_message = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True)
 

@@ -16,9 +16,7 @@ class BiometricVerification(db.Model):
         db.ForeignKey("contractors.contractor_id", ondelete="CASCADE"),
         nullable=False,
     )
-    job_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("jobs.job_id", ondelete="SET NULL")
-    )
+    job_id = db.Column(UUID(as_uuid=True), db.ForeignKey("jobs.job_id", ondelete="SET NULL"))
     verification_type = db.Column(db.Enum(VerificationType), nullable=False)
     verification_status = db.Column(db.String(20), default="success")
     biometric_type = db.Column(db.String(50))
@@ -39,9 +37,7 @@ class BiometricVerification(db.Model):
     location = db.Column(Geography(geometry_type="POINT", srid=4326))
     ip_address = db.Column(db.String(45))  # INET type could be used
     verification_duration_ms = db.Column(db.Integer)
-    created_at = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
+    created_at = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
 
     # Relationships
     contractor = db.relationship("Contractor", back_populates="biometric_verifications")
@@ -57,12 +53,8 @@ class BiometricVerification(db.Model):
         foreign_keys="SiteVisit.check_out_biometric_id",
         back_populates="check_out_biometric",
     )
-    task_executions = db.relationship(
-        "TaskExecution", back_populates="completion_biometric"
-    )
-    job_completions = db.relationship(
-        "JobCompletion", back_populates="completion_biometric"
-    )
+    task_executions = db.relationship("TaskExecution", back_populates="completion_biometric")
+    job_completions = db.relationship("JobCompletion", back_populates="completion_biometric")
     issues_reported = db.relationship(
         "Issue",
         foreign_keys="Issue.issue_reported_biometric_id",
@@ -90,8 +82,7 @@ class BiometricVerification(db.Model):
             name="valid_verification_status",
         ),
         db.CheckConstraint(
-            "biometric_type IN ('fingerprint', "
-            "'face_id', 'voice', 'iris', 'multi_factor')",
+            "biometric_type IN ('fingerprint', " "'face_id', 'voice', 'iris', 'multi_factor')",
             name="valid_biometric_type",
         ),
         db.CheckConstraint(

@@ -37,9 +37,11 @@ def update_visit(visit_id):
     ).first_or_404()
     schema = SiteVisitSchema(partial=True)
     data = request.get_json()
-    updated = schema.load(data, instance=visit, partial=True)  # type: ignore
+    validated = schema.load(data, partial=True)
+    for key in data:
+        setattr(visit, key, getattr(validated, key))
     db.session.commit()
-    return jsonify(schema.dump(updated))
+    return jsonify(schema.dump(visit))
 
 
 @bp.route("/<uuid:visit_id>/checkout", methods=["POST"])

@@ -1,6 +1,17 @@
+x-app-env: &app-env
+  FLASK_ENV: production
+  DATABASE_URL: ${DATABASE_URL:-postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf}
+  DB_PASSWORD: ${DB_PASSWORD:-vistaone_dev}
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/1
+
 services:
-  # ---------- PostgreSQL + PostGIS ----------
+  # ---------- PostgreSQL + PostGIS (local dev only) ----------
+  # Not started unless you pass --profile local-db.
+  # Set DATABASE_URL in .env to point at a remote host instead.
   db:
+    profiles: ["local-db"]
     image: postgis/postgis:16-3.4
     restart: unless-stopped
     environment:
@@ -19,7 +30,8 @@ services:
 
   # ---------- Redis ----------
   redis:
-    image: redis:7-alpine
+    build:
+      context: ./backend/redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -33,6 +45,7 @@ services:
 
   # ---------- Flask web server ----------
   web:
+    image: ${WEB_IMAGE:-vistaone-backend-web}
     build:
       context: ./backend
       target: web
@@ -41,54 +54,73 @@ services:
       - "5000:5000"
     env_file:
       - ./backend/.env
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=5)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------- Run migrations (one-shot) ----------
+  migrate:
+    image: ${MIGRATE_IMAGE:-vistaone-backend-web}
+    build:
+      context: ./backend
+      target: web
+    command: flask db upgrade head
+    restart: "no"
+    env_file:
+      - ./backend/.env
     environment:
-      FLASK_ENV: production
-      DATABASE_URL: postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      FLASK_APP: run.py
+      <<: *app-env
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
 
-  # ---------- Run migrations (one-shot) ----------
-  migrate:
-    build:
-      context: ./backend
-      target: base
-    command: flask db upgrade head
-    env_file:
-      - ./backend/.env
-    environment:
-      FLASK_APP: run.py
-      FLASK_ENV: production
-      DATABASE_URL: postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-    depends_on:
-      db:
-        condition: service_healthy
-
   # ---------- Celery worker ----------
   worker:
+    image: ${WORKER_IMAGE:-vistaone-backend-worker}
     build:
       context: ./backend
       target: worker
     restart: unless-stopped
     env_file:
       - ./backend/.env
-    environment:
-      FLASK_ENV: production
-      DATABASE_URL: postgresql://vistaone:vistaone_dev@db:5432/vistaone_gbtf
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: redis://redis:6379/1
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    environment: *app-env
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  beat:
+    profiles: ["scheduler"]
+    image: ${BEAT_IMAGE:-vistaone-backend-beat}
+    build:
+      context: ./backend
+      target: beat
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
 

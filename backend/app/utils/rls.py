@@ -7,7 +7,11 @@ def set_current_contractor(contractor_id):
     """Set the PostgreSQL session variable for RLS."""
     if contractor_id:
         db.session.execute(
-            text(f"SET app.current_contractor_id" f" = '{contractor_id}';")
+            text("SELECT set_config('app.current_contractor_id', :cid, false);"),
+            {"cid": str(contractor_id)},
         )
     else:
-        db.session.execute(text("SET app.current_contractor_id = NULL;"))
+        db.session.execute(
+            text("SELECT set_config('app.current_contractor_id', :cid, false);"),
+            {"cid": ""},
+        )

@@ -13,9 +13,7 @@ class BiometricVerificationSchema(Schema):
         validate=validate.OneOf(["success", "failed", "timeout", "canceled"])
     )
     biometric_type = fields.Str(
-        validate=validate.OneOf(
-            ["fingerprint", "face_id", "voice", "iris", "multi_factor"]
-        )
+        validate=validate.OneOf(["fingerprint", "face_id", "voice", "iris", "multi_factor"])
     )
     biometric_timestamp = fields.DateTime()
     biometric_confidence_score = fields.Int(validate=validate.Range(min=0, max=100))

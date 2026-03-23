@@ -37,9 +37,7 @@ class Photo(db.Model):
     photo_url = db.Column(db.Text, nullable=False)
     photo_thumbnail_url = db.Column(db.Text)
     photo_filename = db.Column(db.String(255))
-    photo_timestamp = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
+    photo_timestamp = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
     photo_location = db.Column(Geography(geometry_type="POINT", srid=4326))
     photo_direction_degrees = db.Column(db.Integer)
 
@@ -56,9 +54,7 @@ class Photo(db.Model):
         UUID(as_uuid=True),
         db.ForeignKey("biometric_verifications.biometric_id"),
     )
-    uploaded_at = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
+    uploaded_at = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
     photo_size_bytes = db.Column(db.BigInteger)
     photo_metadata = db.Column(JSONB)
 
@@ -69,9 +65,7 @@ class Photo(db.Model):
     synced_to_vendor_at = db.Column(db.DateTime(timezone=True))
     vendor_photo_url = db.Column(db.Text)
 
-    created_at = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
+    created_at = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
 
     # Relationships
     job = db.relationship("Job", back_populates="photos")
@@ -116,9 +110,7 @@ class Photo(db.Model):
             "'safety', 'signature', 'general')",
             name="valid_photo_category",
         ),
-        db.CheckConstraint(
-            "photo_direction_degrees BETWEEN 0 AND 359", name="direction_range"
-        ),
+        db.CheckConstraint("photo_direction_degrees BETWEEN 0 AND 359", name="direction_range"),
         db.CheckConstraint("photo_size_bytes >= 0", name="size_positive"),
     )
 

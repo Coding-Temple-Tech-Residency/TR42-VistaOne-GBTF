@@ -44,7 +44,10 @@ def pull_changes(contractor_id, last_pulled_at):
         SiteVisit.contractor_id == contractor_id, SiteVisit.updated_at >= since
     ).all()
     for sv in sv_qs:
-        key = "created" if sv.created_at >= since else "updated"
+        created_at = sv.created_at
+        if created_at is not None and created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        key = "created" if created_at and created_at >= since else "updated"
         changes["site_visits"][key].append(_model_to_dict(sv))
 
     # Deleted records would need to be tracked separately.
@@ -64,14 +67,14 @@ def push_changes(contractor_id, client_changes):
         db.session.add(sv)
 
     for record in client_changes.get("site_visits", {}).get("updated", []):
-        sv = SiteVisit.query.get(record["visit_id"])
+        sv = db.session.get(SiteVisit, record["visit_id"])
         if sv and str(sv.contractor_id) == str(contractor_id):
             for k, v in record.items():
                 setattr(sv, k, v)
 
     # Deletions: mark as deleted or remove
     for record_id in client_changes.get("site_visits", {}).get("deleted", []):
-        sv = SiteVisit.query.get(record_id)
+        sv = db.session.get(SiteVisit, record_id)
         if sv and str(sv.contractor_id) == str(contractor_id):
             db.session.delete(sv)  # or soft delete
 

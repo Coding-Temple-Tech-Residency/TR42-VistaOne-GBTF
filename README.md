@@ -1,3 +1,48 @@
+
+# 🎉 Sprint 2 Complete: Backend Milestone & CI/CD Live!
+
+We are proud to announce the successful completion of Sprint 2 for the backend! The project now features:
+
+- 🚦 Fully automated CI/CD pipeline (GitHub Actions: lint, type-check, test, build, deploy)
+- 🗄️ Robust, production-ready PostgreSQL + PostGIS database—schema and migrations are live and stable
+- 🧑‍💻 All core APIs and authentication flows are implemented, tested, and ready for frontend integration
+- 🛡️ Security, error handling, and input validation are enforced throughout
+- 🤝 A working, shared database is established for the entire team
+
+This marks a major milestone for the project—enabling seamless collaboration, rapid iteration, and a strong foundation for all future development.
+
+# 🚀 Sprint 1 & 2 Milestones — Backend Completion Celebration
+
+### Foundation & Authentication
+- Environment/tools: Python, Flask, PostgreSQL, Postman, and CI are set up and confirmed
+- Shared GitHub repo and local dev environment in use
+- ERD/schema: Database schema defined with primary/foreign keys and constraints; migrations managed with Alembic/Flask-Migrate
+- Models for Operator, Client, and Contractor created with appropriate fields
+- Seed script creates test data: 2 operators, 2 clients, 2 contractors, and 5 work orders
+- Database migrations run successfully (flask db upgrade)
+- API structure: RESTful routes planned and implemented (e.g., /api/auth/register, /api/auth/login, /api/auth/logout)
+- Authentication: Endpoints for register, login, and logout; passwords hashed with bcrypt; JWT tokens issued and validated
+- POST /api/auth/register accepts username, email, password, first_name, last_name, phone, company_name, employee_id
+- POST /api/auth/login returns JWT access and refresh tokens
+- GET /api/auth/me returns contractor profile when valid token provided
+- Token refresh endpoint POST /api/auth/refresh returns new access token
+- Registration fails gracefully for duplicate username or email
+- Login fails for invalid credentials or inactive account
+- Endpoints tested (unit/integration tests and Postman)
+- Automated tests cover authentication, including edge cases
+- Collaboration: Code and API contracts clear for Frontend, Cybersecurity, and Data Analyst roles
+- Bug fixing: Issues tracked and resolved
+- Deliverables: ERD/schema, live authentication API, and tested endpoints present
+
+### Core Features & API Excellence
+- Core APIs: CRUD endpoints for main resources (contractors, jobs, vendors, visits, etc.) implemented
+- Input validation and error handling present and tested
+- Frontend integration: API contracts clear, joint testing supported
+- API security: Input sanitized, errors handled professionally, secrets managed via environment variables
+- Deployment: CI/CD set up; environment variables used for secrets; Docker and workflow files present
+- Testing: Unit and integration tests cover all major endpoints; bugs tracked and fixed
+- Deliverables: Core APIs functional, tested end-to-end, and meet professional standards
+
 # TR42 VistaOne GBTF — Field Contractor Platform
 
 ## Project Overview
@@ -7,7 +52,6 @@ The Field Contractor platform solves the critical problem of inefficiency, lack 
 - **Laborious and error-prone** — Paper tickets get lost, damaged, or illegible
 - **Difficult to verify** — No way to confirm work was actually performed at the correct location
 - **Vulnerable to fraud** — Phantom employees, inflated hours, and false billing are hard to detect
-- **Expensive** — Existing solutions require $8,000+ hardware or expensive enterprise software
 
 Our solution digitizes the entire workflow using standard smartphones, making it affordable and accessible.
 
@@ -16,9 +60,9 @@ Our solution digitizes the entire workflow using standard smartphones, making it
 | User Role | Description | Primary Need |
 
 |---|---|---|
-| **Field Contractor** | Drivers and field workers performing on-site services | Easy job execution, offline capability, clear instructions |
-| **Vendor Manager** | Dispatchers and managers at service companies | Track contractor work, review anomalies, manage billing |
-| **Operator Admin** | Oil and gas company representatives | Verify work was performed, audit field operations, approve payments |
+| **Contractor** | Drivers and field workers performing on-site services | Easy job execution, offline capability, clear instructions |
+| **Vendor** | Dispatchers and managers at service companies | Track contractor work, review anomalies, manage billing |
+| **Client** | Oil and gas company representatives | Verify work was performed, audit field operations, approve payments |
 
 ---
 
@@ -154,6 +198,7 @@ source .venv/bin/activate        # Linux/macOS
 
 # Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 
 # Configure environment
 cp .env.example .env
@@ -168,6 +213,7 @@ Copy `.env.example` and fill in required values:
 # --- Required ---
 SECRET_KEY=<random-string>
 JWT_SECRET_KEY=<random-string>
+DB_PASSWORD=<database-password>
 DATABASE_URL=postgresql://user:password@localhost:5432/vistaone_gbtf
 
 # --- Optional (tests) ---
@@ -196,13 +242,31 @@ CELERY_RESULT_BACKEND=redis://localhost:6379/1
 
 ### 4. Database Setup
 
-```bash
-# Create the PostgreSQL database with PostGIS
-psql -U postgres -c "CREATE DATABASE vistaone_gbtf;"
-psql -U postgres -d vistaone_gbtf -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+The team shares a **remote PostgreSQL 16 + PostGIS** instance.
+Ask a team lead for the connection string and set it in your `.env`:
 
-# Run migrations
+```env
+DATABASE_URL=postgresql://user:password@db-host:5432/vistaone_gbtf
+TEST_DATABASE_URL=postgresql://user:password@db-host:5432/vistaone_gbtf_test
+```
+
+Then run migrations to bring the remote schema up to date:
+
+```bash
 flask db upgrade head
+```
+
+#### Running a local database (optional)
+
+If you need an isolated local database (e.g. destructive migration testing), use the
+`local-db` Docker Compose profile, which starts a PostGIS container and wires it automatically:
+
+```bash
+# Start local postgres + all app services
+docker compose --profile local-db up -d --build
+
+# Point your .env at the local container
+DATABASE_URL=postgresql://vistaone:vistaone_dev@localhost:5432/vistaone_gbtf
 ```
 
 ### 5. Run the Application
@@ -216,6 +280,15 @@ gunicorn --bind 0.0.0.0:5000 --workers 4 --timeout 120 wsgi:app
 
 # Celery worker (separate terminal)
 celery -A celery_app.celery worker --loglevel=info --concurrency=2
+
+# Format, lint, and type-check
+black app tests config.py run.py wsgi.py celery_app.py
+isort app tests config.py run.py wsgi.py celery_app.py
+flake8 app tests config.py run.py wsgi.py celery_app.py
+mypy --config-file mypy.ini
+
+# Test with coverage
+pytest tests/ --cov=app --cov-report=term-missing -v
 ```
 
 ### 6. Docker Setup (Recommended)
@@ -223,14 +296,20 @@ celery -A celery_app.celery worker --loglevel=info --concurrency=2
 From the project root:
 
 ```bash
-# Start all services (PostgreSQL, Redis, Flask, Celery worker)
-docker compose up -d
+# Start all services using the shared remote database (DATABASE_URL must be set in .env)
+docker compose up -d --build
+
+# ---------- OR: start a local PostgreSQL container alongside the app ----------
+docker compose --profile local-db up -d --build
 
 # View logs
 docker compose logs -f web
 
-# Run migrations (runs automatically on first start)
-docker compose up migrate
+# Run migrations manually when needed
+docker compose run --rm migrate
+
+# Start the optional scheduler
+docker compose --profile scheduler up -d beat
 
 # Stop all services
 docker compose down
@@ -241,11 +320,65 @@ Docker Compose orchestrates five services:
 | Service | Image | Purpose |
 
 |---|---|---|
-| `db` | postgis/postgis:16-3.4 | PostgreSQL + PostGIS |
+| `db` | postgis/postgis:16-3.4 | PostgreSQL + PostGIS (**profile: local-db**) |
 | `redis` | redis:7-alpine | Cache + Celery broker |
 | `web` | Dockerfile → `web` target | Flask + Gunicorn (port 5000) |
-| `migrate` | Dockerfile → `base` target | One-shot `flask db upgrade head` |
+| `migrate` | Dockerfile → `web` target | One-shot `flask db upgrade head` |
 | `worker` | Dockerfile → `worker` target | Celery background tasks |
+| `beat` | Dockerfile → `beat` target | Optional Celery scheduler |
+
+The compose stack now supports both local builds and remote image-based deploys through the `WEB_IMAGE`, `WORKER_IMAGE`, `MIGRATE_IMAGE`, and `BEAT_IMAGE` environment variables.
+
+---
+
+## CI/CD
+
+GitHub Actions is split into three workflows:
+
+| Workflow | Purpose |
+| --- | --- |
+| `ci.yml` | Black, isort, flake8, mypy, pytest, and 100% coverage enforcement |
+| `docker.yml` | Build container images on pull requests and push tagged images to GHCR on `main` |
+| `deploy.yml` | Pull published images on the target host, run migrations, and restart services |
+
+To enable deployment, configure these repository settings:
+
+```text
+Secrets:
+- DEPLOY_HOST
+- DEPLOY_USER
+- DEPLOY_SSH_KEY
+
+Variables:
+- APP_URL
+- DEPLOY_PATH
+```
+
+Dependabot is also configured for GitHub Actions, pip, and Docker updates.
+
+### Branch Protection READ ME READ ME CHARLIE GROUP 2 READ ME READ ME
+
+After the first CI run passes on `main`, enforce the `CI / Pytest` status check as required:
+
+```bash
+# Requires GitHub CLI (gh auth login first) READ ME READ ME CHARLIE GROUP 2 READ ME READ ME
+gh api repos/Coding-Temple-Tech-Residency/TR42-VistaOne-GBTF/branches/main/protection \
+    --method PUT \
+    --field required_status_checks='{"strict":true,"contexts":["CI / Pytest"]}' \
+    --field enforce_admins=false \
+    --field required_pull_request_reviews='{"required_approving_review_count":1}' \
+    --field restrictions=null
+
+# Do the same for the develop branch READ ME READ ME CHARLIE GROUP 2 READ ME READ ME
+gh api repos/Coding-Temple-Tech-Residency/TR42-VistaOne-GBTF/branches/develop/protection \
+    --method PUT \
+    --field required_status_checks='{"strict":true,"contexts":["CI / Pytest"]}' \
+    --field enforce_admins=false \
+    --field required_pull_request_reviews='{"required_approving_review_count":1}' \
+    --field restrictions=null
+```
+
+Or apply it through **Settings → Branches → Branch protection rules** in the GitHub UI.
 
 ---
 
@@ -457,10 +590,8 @@ Copyright &copy; 2026 Coding Temple. All rights reserved.
 | Name | Role |
 
 |---|---|
-| Justin Wold | Full Stack Backend Head |
-| Aldo Emmanuel Pena Herrera | Full Stack Backend |
+| Justin Wold | Full Stack Backend Engineer |
 | Charlie Estrada | Full Stack Frontend Head |
-| Hector Gomez | Cybersecurity |
 
 ## Contact
 

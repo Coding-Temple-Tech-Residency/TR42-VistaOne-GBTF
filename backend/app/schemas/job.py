@@ -19,9 +19,7 @@ class JobSchema(Schema):
     site_address_state = fields.Str()
     site_address_zip = fields.Str()
     site_contact_name = fields.Str()
-    site_contact_phone = fields.Str(
-        validate=validate.Regexp(r"^\+?[0-9\-\(\)\s]{10,20}$")
-    )
+    site_contact_phone = fields.Str(validate=validate.Regexp(r"^\+?[0-9\-\(\)\s]{10,20}$"))
     site_contact_email = fields.Email()
 
     scheduled_start_date = fields.DateTime()
@@ -37,9 +35,7 @@ class JobSchema(Schema):
 
     vendor_name = fields.Str()
     vendor_contact_name = fields.Str()
-    vendor_contact_phone = fields.Str(
-        validate=validate.Regexp(r"^\+?[0-9\-\(\)\s]{10,20}$")
-    )
+    vendor_contact_phone = fields.Str(validate=validate.Regexp(r"^\+?[0-9\-\(\)\s]{10,20}$"))
     vendor_contact_email = fields.Email()
     vendor_instructions = fields.Str()
 

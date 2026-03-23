@@ -17,7 +17,7 @@ bp = Blueprint("tasks", __name__)
 @set_rls
 def execute_task(task_id):
     contractor_id = get_jwt_identity()
-    task = Task.query.get_or_404(task_id)
+    task = db.get_or_404(Task, task_id)
     schema = TaskExecutionSchema()
     data = request.get_json()
     data["task_id"] = task_id

@@ -9,9 +9,7 @@ class ProgressUpdateSchema(Schema):
     contractor_id = fields.UUID(required=True)
     visit_id = fields.UUID()
 
-    completion_percentage = fields.Int(
-        required=True, validate=validate.Range(min=0, max=100)
-    )
+    completion_percentage = fields.Int(required=True, validate=validate.Range(min=0, max=100))
     completion_percentage_before = fields.Int(validate=validate.Range(min=0, max=100))
     # completion_percentage_after is generated, not needed to set
     work_description = fields.Str(required=True)

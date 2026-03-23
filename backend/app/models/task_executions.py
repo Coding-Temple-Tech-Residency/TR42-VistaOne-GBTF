@@ -82,8 +82,7 @@ class TaskExecution(db.Model, TimestampMixin):
         db.Index("idx_executions_visit", visit_id),
         db.Index("idx_executions_biometric", task_completed_biometric_id),
         db.CheckConstraint(
-            "execution_status IN ('pending', "
-            "'started', 'paused', 'completed', 'failed')",
+            "execution_status IN ('pending', " "'started', 'paused', 'completed', 'failed')",
             name="valid_execution_status",
         ),
         db.CheckConstraint(
@@ -94,19 +93,13 @@ class TaskExecution(db.Model, TimestampMixin):
             "task_quantity_completed >= 0",
             name="quantity_positive",
         ),
+        db.CheckConstraint("task_quality_rating BETWEEN 1 AND 5", name="quality_rating_range"),
         db.CheckConstraint(
-            "task_quality_rating BETWEEN 1 AND 5", name="quality_rating_range"
-        ),
-        db.CheckConstraint(
-            "(started_at IS NULL OR "
-            "completed_at IS NULL OR "
-            "started_at <= completed_at)",
+            "(started_at IS NULL OR " "completed_at IS NULL OR " "started_at <= completed_at)",
             name="valid_execution_times",
         ),
         db.CheckConstraint(
-            "(paused_at IS NULL OR "
-            "resumed_at IS NULL OR "
-            "paused_at <= resumed_at)",
+            "(paused_at IS NULL OR " "resumed_at IS NULL OR " "paused_at <= resumed_at)",
             name="valid_pause_resume",
         ),
     )

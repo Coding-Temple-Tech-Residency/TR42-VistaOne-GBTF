@@ -18,9 +18,7 @@ class Issue(db.Model, TimestampMixin):
         db.ForeignKey("jobs.job_id", ondelete="CASCADE"),
         nullable=False,
     )
-    contractor_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("contractors.contractor_id")
-    )
+    contractor_id = db.Column(UUID(as_uuid=True), db.ForeignKey("contractors.contractor_id"))
     assigned_contractor_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("contractors.contractor_id"),
@@ -29,9 +27,7 @@ class Issue(db.Model, TimestampMixin):
         UUID(as_uuid=True),
         db.ForeignKey("site_visits.visit_id", ondelete="SET NULL"),
     )
-    task_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("tasks.task_id", ondelete="SET NULL")
-    )
+    task_id = db.Column(UUID(as_uuid=True), db.ForeignKey("tasks.task_id", ondelete="SET NULL"))
 
     issue_number = db.Column(db.String(50), unique=True)
     issue_title = db.Column(db.String(255), nullable=False)
@@ -44,9 +40,7 @@ class Issue(db.Model, TimestampMixin):
     )
     issue_priority = db.Column(db.Integer)
 
-    issue_reported_at = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
+    issue_reported_at = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
     issue_reported_by_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("contractors.contractor_id"),

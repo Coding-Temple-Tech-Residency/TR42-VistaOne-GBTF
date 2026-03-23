@@ -10,9 +10,7 @@ from app.models.mixins import TimestampMixin
 class ContractorDevice(db.Model, TimestampMixin):
     __tablename__ = "contractor_devices"
 
-    device_registration_id = db.Column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    device_registration_id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     contractor_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("contractors.contractor_id", ondelete="CASCADE"),
@@ -37,9 +35,7 @@ class ContractorDevice(db.Model, TimestampMixin):
     contractor = db.relationship("Contractor", back_populates="devices")
 
     __table_args__ = (
-        db.UniqueConstraint(
-            "contractor_id", "device_id", name="unique_contractor_device"
-        ),
+        db.UniqueConstraint("contractor_id", "device_id", name="unique_contractor_device"),
         db.Index("idx_devices_contractor", contractor_id, is_active),
         db.Index(
             "idx_devices_last_used",

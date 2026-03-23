@@ -29,12 +29,8 @@ class Submission(db.Model, TimestampMixin):
     )
 
     submission_number = db.Column(db.String(50), unique=True)
-    submitted_at = db.Column(
-        db.DateTime(timezone=True), default=db.func.current_timestamp()
-    )
-    submitted_by_id = db.Column(
-        UUID(as_uuid=True), db.ForeignKey("contractors.contractor_id")
-    )
+    submitted_at = db.Column(db.DateTime(timezone=True), default=db.func.current_timestamp())
+    submitted_by_id = db.Column(UUID(as_uuid=True), db.ForeignKey("contractors.contractor_id"))
     submitted_by_biometric = db.Column(db.Boolean, default=False)
     submitted_biometric_id = db.Column(
         UUID(as_uuid=True),
@@ -117,12 +113,8 @@ class Submission(db.Model, TimestampMixin):
             "total_documents_submitted >= 0",
             name="documents_positive",
         ),
-        db.CheckConstraint(
-            "total_signatures_submitted >= 0", name="signatures_positive"
-        ),
-        db.CheckConstraint(
-            "total_tasks_completed >= 0", name="tasks_completed_positive"
-        ),
+        db.CheckConstraint("total_signatures_submitted >= 0", name="signatures_positive"),
+        db.CheckConstraint("total_tasks_completed >= 0", name="tasks_completed_positive"),
         db.CheckConstraint(
             "total_issues_reported >= 0",
             name="issues_positive",
